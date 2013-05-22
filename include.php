@@ -84,14 +84,16 @@ class devDomain
             // Skips entire change when running on original domain
             if($_SERVER['HTTP_HOST']!==$this->host) {
                 if(!!apply_filters('dev-domain/is_chameleon', true)) {
-                    $this->dev_host = apply_filters('dev-domain/new_domain', $_SERVER['HTTP_HOST'].'.dev');
+                    $this->dev_host = apply_filters('dev-domain/new_domain', $_SERVER['HTTP_HOST']);
                 } else {
                     $this->dev_host = apply_filters('dev-domain/new_domain', $this->host.'.dev');
                 }
             }
         }
 
-        $url = str_replace($this->host, $this->dev_host, $url);
+        if($this->dev_host!==null) {
+            $url = str_replace($this->host, $this->dev_host, $url);
+        }
 
         return $url;
     }
