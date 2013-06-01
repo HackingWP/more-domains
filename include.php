@@ -55,7 +55,7 @@ class devDomain
      * Returns singleton instance of this class
      *
      */
-    function instance()
+    static function instance()
     {
         if(static::$instance===null) {
             $instance = new devDomain();
