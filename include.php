@@ -46,8 +46,8 @@ class devDomain
      */
     private function __construct()
     {
-        add_filter('home_url', array($this,'dev_url'), 10);
-        add_filter('site_url', array($this,'dev_url'), 10);
+        add_filter('home_url', array($this,'dev_url'), 0);
+        add_filter('site_url', array($this,'dev_url'), 0);
         add_filter('query',    array($this,'filter_query'));
     }
 
@@ -63,6 +63,29 @@ class devDomain
         }
 
         return static::$instance;
+    }
+
+    /**
+     * Ensures that this plugin is the first plugin to run from all
+     *
+     * Build upon:      http://wordpress.org/support/topic/how-to-change-plugins-load-order
+     * Original author: http://profiles.wordpress.org/jsdalton/
+     *
+     * @param   void
+     * @return  void
+     *
+     */
+    public static function first_in_order() {
+        $this_plugin     = plugin_basename(trim(__FILE__));
+        $active_plugins  = get_option('active_plugins');
+        $this_plugin_key = array_search($this_plugin, $active_plugins);
+
+        if ($this_plugin_key) { // if it's 0 it's the first plugin already, no need to continue
+            array_splice($active_plugins, $this_plugin_key, 1);
+            array_unshift($active_plugins, $this_plugin);
+
+            update_option('active_plugins', $active_plugins);
+        }
     }
 
     /**
@@ -117,6 +140,9 @@ class devDomain
         return $sql;
     }
 }
+
+// Runs on every other plugin's activation
+add_action("activated_plugin", array('devDomain','first_in_order'));
 
 global $wp_dev_domain;
 $wp_dev_domain = devDomain::instance();
