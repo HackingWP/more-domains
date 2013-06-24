@@ -9,7 +9,7 @@ Author:         Martin Adamko
 Author URI:     http://www.attitude.sk
 License:        The MIT License (MIT)
 
-Copyright (c) <year> <copyright holders>
+Copyright (c) 2013 Mgr. art. Martin Adamko
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -101,8 +101,9 @@ class devDomain
     public function dev_url($url)
     {
         if($this->host===null) {
-            preg_match('|https?://(.*?)/|', $url, $matches);
-            $this->host = $matches[1];
+            if(preg_match('|https?://(.*?)/|', $url, $matches)) {
+                $this->host = $matches[1];
+            }
 
             // Skips entire change when running on original domain
             if($_SERVER['HTTP_HOST']!==$this->host) {
