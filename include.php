@@ -37,6 +37,7 @@ class devDomain
 
     private $host     = null;
     private $dev_host = null;
+    private $https    = false;
 
     /**
      * Constructor
@@ -49,6 +50,8 @@ class devDomain
         add_filter('home_url', array($this,'dev_url'), 0);
         add_filter('site_url', array($this,'dev_url'), 0);
         add_filter('query',    array($this,'filter_query'));
+
+        $this->https();
     }
 
     /**
@@ -100,6 +103,9 @@ class devDomain
      */
     public function dev_url($url)
     {
+        // Unify
+        $url = $this->https ? str_replace('http://', 'https://', $url) : str_replace('https://', 'http://', $url);
+
         if($this->host===null) {
             if(preg_match('|https?://(.*?)/|', $url, $matches)) {
                 $this->host = $matches[1];
@@ -120,6 +126,17 @@ class devDomain
         }
 
         return $url;
+    }
+
+    /**
+     * Set Bool for HTTPS
+     *
+     * Temporary, to fix som odds
+     *
+     */
+    protected function https()
+    {
+        $this->https = isset($_SERVER['HTTPS']) ? !! $_SERVER['HTTPS'] : false;
     }
 
     /**
