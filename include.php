@@ -4,7 +4,7 @@
 Plugin Name:    More Domains
 Plugin URI:     http://www.attitude.sk
 Description:    Allows WordPress installation to run on multiple domains other than installed
-Version:        v0.1.0
+Version:        v0.2.0
 Author:         Martin Adamko
 Author URI:     http://www.attitude.sk
 License:        The MIT License (MIT)
