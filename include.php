@@ -31,7 +31,7 @@ THE SOFTWARE.
 
 */
 
-class devDomain
+class DevDomain
 {
     static  $instance = null;
 
@@ -49,19 +49,23 @@ class devDomain
     {
         add_filter('home_url', array($this,'dev_url'), 0);
         add_filter('site_url', array($this,'dev_url'), 0);
+        add_filter('plugins_url', array($this,'dev_url'), 0);
+        add_filter('theme_root_uri', array($this,'dev_url'), 0);
         add_filter('query',    array($this,'filter_query'));
 
-        $this->https();
+        $this->setHttpsIfSecure();
     }
 
     /**
      * Returns singleton instance of this class
      *
+     * @return this
+     * 
      */
     static function instance()
     {
         if(static::$instance===null) {
-            $instance = new devDomain();
+            $instance = new DevDomain();
             return $instance;
         }
 
@@ -98,7 +102,7 @@ class devDomain
      * or adding `.dev` at the end
      *
      * @param   $url    string  URL string
-     * @returns         string  Modified URL string
+     * @return          string  Modified URL string
      *
      */
     public function dev_url($url)
@@ -134,7 +138,7 @@ class devDomain
      * Temporary, to fix som odds
      *
      */
-    protected function https()
+    protected function setHttpsIfSecure()
     {
         $this->https = isset($_SERVER['HTTPS']) ? !! $_SERVER['HTTPS'] : false;
     }
@@ -145,7 +149,7 @@ class devDomain
      * Make sure none of .dev domain is saved into database
      *
      * @param   $sql string SQL query passed from every DB query
-     * @returns      string Modified SQL query
+     * @return       string Modified SQL query
      *
      */
     public function filter_query($sql)
@@ -157,7 +161,7 @@ class devDomain
 
         return $sql;
     }
-    
+
     /**
      * Checks if current host matches set of allowed hosts
      *
@@ -188,8 +192,8 @@ if (!defined('MORE_DOMAINS_HOSTS')) {
 
 if (DevDomain::hostMatches(explode('|', MORE_DOMAINS_HOSTS)))  {
     // Runs on every other plugin's activation
-    add_action("activated_plugin", array('devDomain','first_in_order'));
+    add_action("activated_plugin", array('DevDomain','first_in_order'));
 
     global $wp_dev_domain;
-    $wp_dev_domain = devDomain::instance();
+    $wp_dev_domain = DevDomain::instance();
 }
