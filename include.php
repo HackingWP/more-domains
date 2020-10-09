@@ -174,7 +174,8 @@ class DevDomain
      */
     public static function hostMatches(array $allowedHosts)
     {
-        $host = array_shift(explode(':', $_SERVER['HTTP_HOST']));
+        $serverHttpHost = explode(':', $_SERVER['HTTP_HOST']);
+        $host = array_shift($serverHttpHost);
 
         foreach ($allowedHosts as $allowedHost) {
             if ($host === $allowedHost) {
