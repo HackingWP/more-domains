@@ -157,10 +157,39 @@ class devDomain
 
         return $sql;
     }
+    
+    /**
+     * Checks if current host matches set of allowed hosts
+     *
+     * Define `MORE_DOMAINS_HOSTS` constant as a string where
+     * hosts are divided by a pipe character.
+     *
+     * @param  $allowedHost array   List of hosts
+     * @return              boolean True or false
+     *
+     */
+    public static function hostMatches(array $allowedHosts)
+    {
+        $host = array_shift(explode(':', $_SERVER['HTTP_HOST']));
+
+        foreach ($allowedHosts as $allowedHost) {
+            if ($host === $allowedHost) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
 
-// Runs on every other plugin's activation
-add_action("activated_plugin", array('devDomain','first_in_order'));
+if (!defined('MORE_DOMAINS_HOSTS')) {
+    define('MORE_DOMAINS_HOSTS', $_SERVER['HTTP_HOST']);
+}
 
-global $wp_dev_domain;
-$wp_dev_domain = devDomain::instance();
+if (DevDomain::hostMatches(explode('|', MORE_DOMAINS_HOSTS)))  {
+    // Runs on every other plugin's activation
+    add_action("activated_plugin", array('devDomain','first_in_order'));
+
+    global $wp_dev_domain;
+    $wp_dev_domain = devDomain::instance();
+}
