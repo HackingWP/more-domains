@@ -60,7 +60,7 @@ class DevDomain
      * Returns singleton instance of this class
      *
      * @return this
-     * 
+     *
      */
     static function instance()
     {
@@ -190,7 +190,9 @@ if (!defined('MORE_DOMAINS_HOSTS')) {
     define('MORE_DOMAINS_HOSTS', $_SERVER['HTTP_HOST']);
 }
 
-if (DevDomain::hostMatches(explode('|', MORE_DOMAINS_HOSTS)))  {
+$more_domains_hosts = explode('|', MORE_DOMAINS_HOSTS);
+
+if (DevDomain::hostMatches($more_domains_hosts)) {
     // Runs on every other plugin's activation
     add_action("activated_plugin", array('DevDomain','first_in_order'));
 
