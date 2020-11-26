@@ -4,7 +4,7 @@
 Plugin Name:    More Domains
 Plugin URI:     http://www.attitude.sk
 Description:    Allows WordPress installation to run on multiple domains other than installed
-Version:        v0.2.0
+Version:        v0.3.0
 Author:         Martin Adamko
 Author URI:     http://www.attitude.sk
 License:        The MIT License (MIT)
@@ -45,7 +45,7 @@ class DevDomain
      * @param void
      *
      */
-    private function __construct()
+    private function __construct($host)
     {
         add_filter('home_url', array($this,'dev_url'), 0);
         add_filter('site_url', array($this,'dev_url'), 0);
@@ -53,7 +53,7 @@ class DevDomain
         add_filter('theme_root_uri', array($this,'dev_url'), 0);
         add_filter('query',    array($this,'filter_query'));
 
-        $this->setHttpsIfSecure();
+        $this->setHttpsIfSecure($host);
     }
 
     /**
@@ -62,10 +62,10 @@ class DevDomain
      * @return this
      *
      */
-    static function instance()
+    static function instance($host)
     {
         if(static::$instance===null) {
-            $instance = new DevDomain();
+            $instance = new DevDomain($host);
             return $instance;
         }
 
@@ -138,9 +138,20 @@ class DevDomain
      * Temporary, to fix som odds
      *
      */
-    protected function setHttpsIfSecure()
+    protected function setHttpsIfSecure($host)
     {
-        $this->https = isset($_SERVER['HTTPS']) ? !! $_SERVER['HTTPS'] : false;
+        $isHTTPS = parse_url($host, PHP_URL_SCHEME) === 'https';
+        $requestHTTPS = isset($_SERVER['HTTPS']) ? !! $_SERVER['HTTPS'] : false;
+
+        // Domain has define scheme, but the request has different scheme:
+        if ($isHTTPS !== $requestHTTPS) {
+            header('Location: '.$host.$_SERVER['REQUEST_URI'], true, '302');
+            header('X-Redirect-By: More Domains plugin for WordPress');
+
+            exit("More Domains: Redirecting to ${host} as defined in allowed hosts.");
+        }
+
+        $this->https = $isHTTPS || $requestHTTPS;
     }
 
     /**
@@ -174,16 +185,14 @@ class DevDomain
      */
     public static function hostMatches(array $allowedHosts)
     {
-        $serverHttpHost = explode(':', $_SERVER['HTTP_HOST']);
-        $host = array_shift($serverHttpHost);
+        $host = $_SERVER['HTTP_HOST'];
+        $host = strpos($host, ':') ? substr($host, 0, strpos($host, ':')) : $host;
 
         foreach ($allowedHosts as $allowedHost) {
-            if ($host === $allowedHost) {
-                return true;
+            if ($host === parse_url($allowedHost, PHP_URL_HOST)) {
+                return $allowedHost;
             }
         }
-
-        return false;
     }
 }
 
@@ -191,12 +200,14 @@ if (!defined('MORE_DOMAINS_HOSTS')) {
     define('MORE_DOMAINS_HOSTS', $_SERVER['HTTP_HOST']);
 }
 
-$more_domains_hosts = explode('|', MORE_DOMAINS_HOSTS);
+$more_domains_hosts = is_array(MORE_DOMAINS_HOSTS)
+    ? MORE_DOMAINS_HOSTS
+    : explode('|', MORE_DOMAINS_HOSTS);
 
-if (DevDomain::hostMatches($more_domains_hosts)) {
+if ($matchedHost = DevDomain::hostMatches($more_domains_hosts)) {
     // Runs on every other plugin's activation
     add_action("activated_plugin", array('DevDomain','first_in_order'));
 
     global $wp_dev_domain;
-    $wp_dev_domain = DevDomain::instance();
+    $wp_dev_domain = DevDomain::instance($matchedHost);
 }
